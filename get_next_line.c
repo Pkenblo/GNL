@@ -11,11 +11,11 @@ int	fill_buff(int fd, char **buff, int buff_size)
 	return (i);
 }
 
-int	look4endl(char *buff, int buff_size, int b_read)
+int	look4endl(char *buff, int buff_size, int b_read, int start)
 {
 	int	i;
 
-	i = 0;
+	i = start;
 	if (buff == NULL)
 		return (-1);
 	while (i < buff_size && i < b_read && buff[i] != '\n')
@@ -73,27 +73,32 @@ void	free_mem(char *ptr, int ptr_size)
 // esto no se la verdad
 char	*get_next_line(int fd)
 {
-	static int	i;
+	static int	endl_pos;
 	static int	buff_size;
 	static char	*buff;
 	static char	*ret;
 	static int	ret_size;
+	static int	total_read;
 
 #ifdef BUFFER_SIZE
 	buff_size = BUFFER_SIZE;
 #else
 	buff_size = 42;
 #endif
-	buff = malloc(buff_size * sizeof(char));
+	if (!buff)
+		buff = malloc(buff_size * sizeof(char));
+	if (!endl_pos)
+		endl_pos = buff_size;
 	ret_size = 0;
-	i = buff_size;
 	ret = NULL;
-	while (i == buff_size)
+	while (endl_pos == buff_size)
 	{
-		i = fill_buff(fd, &buff, buff_size);
-		i = look4endl(buff, buff_size, i);
-		if(!save_in_ret(ret, buff, i, ret_size))
+		if(total_read == endl_pos)
+			total_read = fill_buff(fd, &buff, buff_size);
+		endl_pos = look4endl(buff, buff_size, total_read, endl_pos + 1);
+		if(!save_in_ret(ret, buff //como hago que empiece a leer desde esta parte sin meterle mas parametros a la funcion //, endl_pos, ret_size))
 			return NULL;
+		ret_size += endl_pos;
 	}
 	return (ret);
 }
