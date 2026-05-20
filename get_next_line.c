@@ -1,104 +1,106 @@
-#include <stdlib.h>
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: palvare2 <palvare2@student.42malaga.com>   +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/05/20 15:29:22 by palvare2          #+#    #+#             */
+/*   Updated: 2026/05/20 19:53:30 by palvare2         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "get_next_line.h"
 #include <unistd.h>
 
-int	fill_buff(int fd, char **buff, int buff_size)
+
+
+char *get_out(char *line)
 {
-	int	i;
-
-	i = read(fd, buff, buff_size);
-	if (!i)
-		*buff = NULL;
-	return (i);
-}
-
-int	look4endl(char *buff, int buff_size, int b_read, int start)
-{
-	int	i;
-
-	i = start;
-	if (buff == NULL)
-		return (-1);
-	while (i < buff_size && i < b_read && buff[i] != '\n')
-		i++;
-	return (i);
-}
-
-int	save_in_ret(char *ret, char *buff, int buff_size, int ret_size)
-{
-	char	*aux;
+	char	*new;
 	int		i;
-	int		j;
 
-	if(buff_size == -1)
-		return 1;
-	aux = malloc((ret_size + buff_size) * sizeof(char));
-	if(!aux)
-		return (0);
 	i = 0;
-	j = 0;
-	while (i < ret_size)
+	if (line[i] == 0)
+		return (NULL);
+	while (line[i] && line[i] != '\n')
+		i++;
+	new = (char *)malloc(sizeof(char) * (i + 2));
+	if (!new)
+		return (NULL);
+	i = 0;
+	while (line[i] && line[i] != '\n')
 	{
-		aux[i] = ret[i];
+		new[i] = line[i];
 		i++;
 	}
-	while (i - ret_size < buff_size)
+	if (line[i] == '\n')
 	{
-		aux[i] = ret[j];
+		new[i] = '\n';
 		i++;
-		j++;
 	}
-	free_mem(ret, ret_size);
-	ret = aux;
-	return 1;
+	new[i] = '\0';
+	return (new);
 }
 
-void	free_mem(char *ptr, int ptr_size)
+char *get_save(char *line)
 {
-	int i;
+    int i;
+    int j;
+    char *ret;
 
-	i = 0;
-	while (i < ptr_size)
-	{
-		ptr[i] = 0;
+    j = 0;
+    i = 0;
+    if (!line)
+        return (NULL);
+    if (ft_strchr(line, '\n') == -1)
+        return free_str(&line);
+    while (line[i] != '\n')
 		i++;
-	}
-	free(ptr);
+    i++;
+    ret = malloc(sizeof(char) * ((ft_len(line) - i) + 1));
+    if(!ret)
+        return free_str(&line);
+    while(line[i])
+        ret[j++] = line[i++];
+    ret[j] = 0;
+    free_str(&line);
+    return ret;
 }
-//problemas en principio cuando el buffer se queda lleno de cosas
-//de la siguiente linea
 
-// tener en cuenta que si se lee entero pero se encuentro un \n antes
-// i sera distinto del valor de i retornado anteriormente a si que
-// igual lo puedo guardar en algun sitio para comprobarlos y ver si hago algo con
-// esto no se la verdad
+char *ft_malloc(int fd)
+{
+    char    *buff;
+    int     size;
+    char    *ret; 
+
+    buff = malloc(sizeof(char) * (BUFFER_SIZE + 1));
+    buff[0] = 0;
+    size = 1;
+    ret = NULL;
+    while (size != 0 && ft_strchr(buff, '\n') == -1)
+    {
+        size = read(fd, buff, BUFFER_SIZE);
+        if (size == -1)
+            return (free_str(&buff));
+        buff[size] = 0;
+        ft_strcat(&ret, buff);
+    }
+    free_str(&buff);
+    return ret;
+}
+
 char	*get_next_line(int fd)
 {
-	static int	endl_pos;
-	static int	buff_size;
-	static char	*buff;
-	static char	*ret;
-	static int	ret_size;
-	static int	total_read;
+    char *out;
+    static char *line;
 
-#ifdef BUFFER_SIZE
-	buff_size = BUFFER_SIZE;
-#else
-	buff_size = 42;
-#endif
-	if (!buff)
-		buff = malloc(buff_size * sizeof(char));
-	if (!endl_pos)
-		endl_pos = buff_size;
-	ret_size = 0;
-	ret = NULL;
-	while (endl_pos == buff_size)
-	{
-		if(total_read == endl_pos)
-			total_read = fill_buff(fd, &buff, buff_size);
-		endl_pos = look4endl(buff, buff_size, total_read, endl_pos + 1);
-		if(!save_in_ret(ret, buff //como hago que empiece a leer desde esta parte sin meterle mas parametros a la funcion //, endl_pos, ret_size))
-			return NULL;
-		ret_size += endl_pos;
-	}
-	return (ret);
+    if (fd < 0 || BUFFER_SIZE <= 0)
+        return free_str(&line);
+    ft_strcat(&line, ft_malloc(fd));
+    if(line == NULL)
+        return (NULL);
+    out = get_out(line);
+    line = get_save(line);
+    return out;
 }
