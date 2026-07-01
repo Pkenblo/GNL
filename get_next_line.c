@@ -6,7 +6,7 @@
 /*   By: palvare2 <palvare2@student.42malaga.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/20 15:29:22 by palvare2          #+#    #+#             */
-/*   Updated: 2026/05/26 14:15:39 by palvare2         ###   ########.fr       */
+/*   Updated: 2026/07/01 07:39:00 by palvare2         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ char	*get_save(char *line)
 	return (ret);
 }
 
-char	*ft_malloc(int fd)
+char	*ft_malloc(int fd, int *read_error)
 {
 	char	*buff;
 	int		size;
@@ -82,7 +82,11 @@ char	*ft_malloc(int fd)
 	{
 		size = read(fd, buff, BUFFER_SIZE);
 		if (size == -1)
+		{
+			*read_error = 1;
+			free_str(&ret);
 			return (free_str(&buff));
+		}
 		buff[size] = 0;
 		ft_strcat(&ret, buff);
 	}
@@ -95,16 +99,21 @@ char	*get_next_line(int fd)
 	char		*out;
 	static char	*line;
 	char		*new_line;
+	int			read_error;
 
-	if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, 0, 0) < 0)
-	{
+	if (fd < 0 || BUFFER_SIZE <= 0)
 		return (free_str(&line));
+	read_error = 0;
+	if (ft_strchr(line, '\n') == -1)
+	{
+		new_line = ft_malloc(fd, &read_error);
+		if (read_error)
+			return (free_str(&line));
+		ft_strcat(&line, new_line);
+		free_str(&new_line);
+		if (line == NULL)
+			return (NULL);
 	}
-	new_line = ft_malloc(fd);
-	ft_strcat(&line, new_line);
-	free_str(&new_line);
-	if (line == NULL)
-		return (NULL);
 	out = get_out(line);
 	line = get_save(line);
 	return (out);

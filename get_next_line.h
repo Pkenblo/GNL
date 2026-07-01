@@ -6,7 +6,7 @@
 /*   By: palvare2 <palvare2@student.42malaga.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/20 15:32:30 by palvare2          #+#    #+#             */
-/*   Updated: 2026/05/26 14:21:19 by palvare2         ###   ########.fr       */
+/*   Updated: 2026/07/01 07:39:02 by palvare2         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ int		ft_strcat(char **str1, char *str2);
 // get_next_line_h
 char	*get_out(char *line);
 char	*get_save(char *line);
-char	*ft_malloc(int fd);
+char	*ft_malloc(int fd, int *read_error);
 char	*get_next_line(int fd);
 
 #endif
